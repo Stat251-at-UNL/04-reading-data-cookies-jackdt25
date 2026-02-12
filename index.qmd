@@ -37,6 +37,7 @@ ggplotly()
 #install a pyhton package
 libary(reticulate)
 py_install(c("skimy","numpy"))
+
 ```
 
 
@@ -88,9 +89,13 @@ clean_cookies <- cookies |> group_by(Ingredient) |>
             missing_rating = sum(is.na(Rating)))
 clean_cookies
 
-count_cookies <- cookies |> 
-  count(Ingredient, sort = T)
+count_cookies <- cookies |>
+  distinct(Ingredient, Recipe_Index) |>
+  count(Ingredient, name = "total", sort = T)
 count_cookies
+
+joint <- inner_join(clean_cookies,count_cookies)
+
 ```
 
 ```{python}
