@@ -2,7 +2,7 @@
 title: "Chocolate Chip Cookies"
 execute:
   error: true
-author: "Your Name"
+author: "Jack Tyrrell"
 output: html_document
 ---
 
@@ -12,7 +12,8 @@ First, read in the CSV data of cookie ingredients.
 Make sure that your end-result data has appropriate types for each column - these should match the types provided in the documentation in the README.md file.
 
 ```{r}
-
+cookies <- read.csv("~/Stat 251/04-reading-data-cookies-jackdt25/choc_chip_cookie_ingredients.csv")
+cookies
 ```
 
 ```{python}
@@ -34,9 +35,9 @@ Exploratory data analysis is the process of getting familiar with your dataset. 
 
 Generate at least 5 questions you might explore using this database of cookie ingredients.
 
-1.
-2. 
-3. 
+1.How many recipes contain eggs
+2. How many recipes contain nuts
+3. How many recipes used white chocolate and got a rating above 0.85
 4. 
 5. 
 
@@ -53,7 +54,15 @@ Install both packages, and read the package documentation ([R](https://cran.r-pr
 
 
 ```{r}
+library(skimr)
+library(dplyr)
+skim(cookies)
 
+missing_col <- skim(cookies) |>
+  filter(n_missing > 0 )
+missing_col
+
+length(unique(cookies$Recipe_Index))
 ```
 
 ```{python}
@@ -62,12 +71,19 @@ Install both packages, and read the package documentation ([R](https://cran.r-pr
 
 [Part 2] Write 1-2 sentences about what you can tell from each summary display you generate. Did you discover anything new about the data?
 
+From the skim function, I learned that there are NA and missing values in our dataset in the 'rating' column. We only have .4924 of our dataset with a 'rating' and the rest are missing. I also learned that there are 209 unique recipies given 
+
 ### Generating Tables
 
 Another useful technique for exploratory data analysis is to generate summary tables. 
 You may want to use the `dplyr` package in R (`group_by` or `count` functions), as well as the `groupby` and `count` methods in Pandas. [Python example](https://sparkbyexamples.com/pandas/pandas-groupby-count-examples/), [R example](https://dplyr.tidyverse.org/reference/count.html)
 
 [Part 1] Using R and Python, generate a table that shows what **proportion** of recipes contain each type of ingredient, for the most common 20 ingredients.
+
+```{r}
+cookies1 <- group_by(cookies, Recipe_Index, .add = FALSE, .drop = group_by_drop_default(cookies))
+cookies1
+```
 
 [Part 2] Print out a character string that lists all of the ingredients that do not appear in at least 20 recipes.
 
