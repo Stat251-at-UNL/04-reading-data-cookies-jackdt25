@@ -16,6 +16,7 @@ library(skimr)
 library(dplyr)
 library(ggplot2)
 library(plotly)
+<<<<<<< HEAD
 cookies <- read.csv("choc_chip_cookie_ingredients.csv")
 
 cookies |> str()
@@ -32,14 +33,36 @@ cookies |> group_by(Ingredient) |>
 
 ggplotly()
 
+=======
+cookies <- ("~/Stat 251/04-reading-data-cookies-jackdt25/choc_chip_cookie_ingredients.csv")
+>>>>>>> 3de440149443ecaf15a909a7bae9fc94c0d9e57d
 
+cookies |> str()
+
+cookies |> filter(Recipe_Index == "AR_1")
+
+cookies |> group_by(Ingredient) |>
+  summarize(avg_rating = mean(Rating, na.rm = T),
+              n = n(),
+            missing_rating = sum(is.na(Rating))) |>
+  arrange(desc(avg_rating)) |>
+  ggplot(aes(x = n-missing_rating, y=avg_rating, label = Ingredient)) +
+    geom_point()
+
+ggplotly()
 ```
 
 ```{python}
+<<<<<<< HEAD
 library(reticulate)
 import pandas as pd
 import numpy as np
 import skimpy as sk 
+=======
+#install a pyhton package
+libary(reticulate)
+py_install(c("skimy","numpy"))
+>>>>>>> 3de440149443ecaf15a909a7bae9fc94c0d9e57d
 
 ```
 
@@ -155,6 +178,7 @@ You may want to use the `dplyr` package in R (`group_by` or `count` functions), 
 [Part 1] Using R and Python, generate a table that shows what **proportion** of recipes contain each type of ingredient, for the most common 20 ingredients.
 
 ```{r}
+<<<<<<< HEAD
 n_recipes <- cookies |> distinct(Recipe_Index) |> nrow()
 
 top20_props <- cookies |>
@@ -184,6 +208,10 @@ top20_props = (
 top20_props["proportion"] = top20_props["num_recipes"] / n_recipes
 
 top20_props
+=======
+cookies1 <- group_by(cookies, Recipe_Index, .add = FALSE, .drop = group_by_drop_default(cookies))
+cookies1
+>>>>>>> 3de440149443ecaf15a909a7bae9fc94c0d9e57d
 
 ```
 
