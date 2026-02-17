@@ -16,7 +16,7 @@ library(skimr)
 library(dplyr)
 library(ggplot2)
 library(plotly)
-cookies <- ("~/Stat 251/04-reading-data-cookies-jackdt25/choc_chip_cookie_ingredients.csv")
+cookies <- read.csv("choc_chip_cookie_ingredients.csv")
 
 cookies |> str()
 
@@ -31,12 +31,14 @@ cookies |> group_by(Ingredient) |>
     geom_point()
 
 ggplotly()
+
+
 ```
 
 ```{python}
-#install a pyhton package
-libary(reticulate)
-py_install(c("skimy","numpy"))
+import pandas as pd
+import numpy as np
+import skimpy as sk 
 
 ```
 
@@ -95,11 +97,50 @@ count_cookies <- cookies |>
 count_cookies
 
 joint <- inner_join(clean_cookies,count_cookies)
-
+joint
 ```
 
 ```{python}
+cookies = pd.read_csv("choc_chip_cookie_ingredients.csv")
+cookies.info()
+cookies.describe(include="all")
 
+
+missing_col = (
+    cookies.isna()
+    .sum()
+    .reset_index()
+    .rename(columns={"index": "column", 0: "n_missing"})
+    .query("n_missing > 0")
+)
+print(missing_col)
+
+cookies["Recipe_Index"].nunique()
+
+
+clean_cookies = (
+    cookies.groupby("Ingredient", as_index=False)
+    .agg(
+        avg_rating=("Rating", lambda s: s.mean(skipna=True)),
+        n=("Ingredient", "size"),                      
+        missing_rating=("Rating", lambda s: s.isna().sum())
+    )
+)
+print(clean_cookies)
+
+count_cookies = (
+    cookies[["Ingredient", "Recipe_Index"]]
+    .drop_duplicates()
+    .groupby("Ingredient", as_index=False)
+    .size()
+    .rename(columns={"size": "total"})
+    .sort_values("total", ascending=False)
+)
+print(count_cookies)
+
+
+joint = clean_cookies.merge(count_cookies, on="Ingredient", how="inner")
+print(joint)
 ```
 
 [Part 2] Write 1-2 sentences about what you can tell from each summary display you generate. Did you discover anything new about the data?
@@ -114,12 +155,50 @@ You may want to use the `dplyr` package in R (`group_by` or `count` functions), 
 [Part 1] Using R and Python, generate a table that shows what **proportion** of recipes contain each type of ingredient, for the most common 20 ingredients.
 
 ```{r}
-cookies1 <- group_by(cookies, Recipe_Index, .add = FALSE, .drop = group_by_drop_default(cookies))
-cookies1
+n_recipes <- cookies |> distinct(Recipe_Index) |> nrow()
+
+top20_props <- cookies |>
+  distinct(Recipe_Index, Ingredient) |>           
+  count(Ingredient, name = "num_recipes") |>       
+  mutate(proportion = num_recipes / n_recipes) |>  
+  arrange(desc(num_recipes)) |>
+  slice_head(n = 20)
+
+top20_props
+```
+
+```{python}
+
+n_recipes = cookies["Recipe_Index"].nunique()
+
+top20_props = (
+    cookies[["Recipe_Index", "Ingredient"]]
+    .drop_duplicates()                             
+    .groupby("Ingredient")["Recipe_Index"]
+    .nunique()                                     
+    .sort_values(ascending=False)
+    .head(20)
+    .reset_index(name="num_recipes")
+)
+
+top20_props["proportion"] = top20_props["num_recipes"] / n_recipes
+
+print(top20_props)
 
 ```
 
 [Part 2] Print out a character string that lists all of the ingredients that do not appear in at least 20 recipes.
+
+```{r}
+bottom_props <- cookies |>
+  distinct(Recipe_Index, Ingredient) |>           
+  count(Ingredient, name = "num_recipes") |>       
+  filter(num_recipes < 20) |>  
+  arrange(num_recipes) 
+
+bottom_props
+```
+
 
 
 (Delete this note, but you can include data values inline in markdown text by using backticks, at least in R. For instance, here is R's built in value for pi: `r pi`. Unfortunately, this doesn't work in python using the knitr markdown engine, but you can print the list out in python anyways using a code chunk.)
@@ -130,4 +209,11 @@ Using whatever plotting system you are comfortable with in R or python, see if y
 
 [Part 1] Create at least one plot (it doesn't have to be pretty) that showcases an interesting facet of the data.
 
+```{r}
+ggplot(joint, aes(x = n-missing_rating, y=avg_rating, label = Ingredient)) +
+    geom_col() 
+ ggplotly() 
+```
+
 [Part 2] Write 2-3 sentences about what you can learn from that plot and what directions you might want to investigate from here.
+This plot is not great, but it does show which ingredients were very common across all recipies. The problem with this plot is that it stacks the ratings of the ingredients that have the same 'n-missing_rating' value.
