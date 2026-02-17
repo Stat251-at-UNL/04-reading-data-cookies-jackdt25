@@ -2,7 +2,7 @@
 title: "Chocolate Chip Cookies"
 execute:
   error: true
-author: "Your Name"
+author: "Jack Tyrrell"
 output: html_document
 ---
 
@@ -12,11 +12,38 @@ First, read in the CSV data of cookie ingredients.
 Make sure that your end-result data has appropriate types for each column - these should match the types provided in the documentation in the README.md file.
 
 ```{r}
+library(skimr)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+cookies <- read.csv("choc_chip_cookie_ingredients.csv")
+
+cookies |> str()
+
+cookies |> filter(Recipe_Index == "AR_1")
+
+cookies |> group_by(Ingredient) |>
+  summarize(avg_rating = mean(Rating, na.rm = T),
+              n = n(),
+            missing_rating = sum(is.na(Rating))) |>
+  arrange(desc(avg_rating)) |>
+  ggplot(aes(x = n-missing_rating, y=avg_rating, label = Ingredient)) +
+    geom_point()
+
+ggplotly()
+
 
 ```
 
 ```{python}
+import pandas as pd
+import numpy as np
+import skimpy as sk 
+<<<<<<< HEAD
 
+=======
+cookies = pd.read_csv("choc_chip_cookie_ingredients.csv")
+>>>>>>> b8f1f5cde23b815b19117494cceef042696f94ab
 ```
 
 
@@ -34,11 +61,11 @@ Exploratory data analysis is the process of getting familiar with your dataset. 
 
 Generate at least 5 questions you might explore using this database of cookie ingredients.
 
-1.
-2. 
-3. 
-4. 
-5. 
+1.How many recipes contain eggs
+2. How many recipes contain nuts
+3. How many recipes used white chocolate and got a rating above 0.85
+4. What ingredient had the highest average rating - corn syrup (done above)
+5. What was the average rating for recipes that used non all purpose flour
 
 
 ### Skimming the Data
@@ -54,13 +81,81 @@ Install both packages, and read the package documentation ([R](https://cran.r-pr
 
 ```{r}
 
+skim(cookies)
+
+missing_col <- skim(cookies) |>
+  filter(n_missing > 0 )
+missing_col
+
+length(unique(cookies$Recipe_Index))
+
+clean_cookies <- cookies |> group_by(Ingredient) |>
+  summarize(avg_rating = mean(Rating, na.rm = T),
+              n = n(),
+            missing_rating = sum(is.na(Rating)))
+clean_cookies
+
+count_cookies <- cookies |>
+  distinct(Ingredient, Recipe_Index) |>
+  count(Ingredient, name = "total", sort = T)
+count_cookies
+
+joint <- inner_join(clean_cookies,count_cookies)
+joint
 ```
 
 ```{python}
+cookies = pd.read_csv("choc_chip_cookie_ingredients.csv")
+cookies.info()
+cookies.describe(include="all")
 
+<<<<<<< HEAD
+=======
+cookies.info()
+cookies.describe(include="all")
+
+>>>>>>> b8f1f5cde23b815b19117494cceef042696f94ab
+
+missing_col = (
+    cookies.isna()
+    .sum()
+    .reset_index()
+    .rename(columns={"index": "column", 0: "n_missing"})
+    .query("n_missing > 0")
+)
+print(missing_col)
+
+cookies["Recipe_Index"].nunique()
+
+
+clean_cookies = (
+    cookies.groupby("Ingredient", as_index=False)
+    .agg(
+        avg_rating=("Rating", lambda s: s.mean(skipna=True)),
+        n=("Ingredient", "size"),                      
+        missing_rating=("Rating", lambda s: s.isna().sum())
+    )
+)
+print(clean_cookies)
+
+count_cookies = (
+    cookies[["Ingredient", "Recipe_Index"]]
+    .drop_duplicates()
+    .groupby("Ingredient", as_index=False)
+    .size()
+    .rename(columns={"size": "total"})
+    .sort_values("total", ascending=False)
+)
+print(count_cookies)
+
+
+joint = clean_cookies.merge(count_cookies, on="Ingredient", how="inner")
+print(joint)
 ```
 
 [Part 2] Write 1-2 sentences about what you can tell from each summary display you generate. Did you discover anything new about the data?
+
+From the skim function, I learned that there are NA and missing values in our dataset in the 'rating' column. We only have .4924 of our dataset with a 'rating' and the rest are missing. I also learned that there are 209 unique recipies given 
 
 ### Generating Tables
 
@@ -69,7 +164,51 @@ You may want to use the `dplyr` package in R (`group_by` or `count` functions), 
 
 [Part 1] Using R and Python, generate a table that shows what **proportion** of recipes contain each type of ingredient, for the most common 20 ingredients.
 
+```{r}
+n_recipes <- cookies |> distinct(Recipe_Index) |> nrow()
+
+top20_props <- cookies |>
+  distinct(Recipe_Index, Ingredient) |>           
+  count(Ingredient, name = "num_recipes") |>       
+  mutate(proportion = num_recipes / n_recipes) |>  
+  arrange(desc(num_recipes)) |>
+  slice_head(n = 20)
+
+top20_props
+```
+
+```{python}
+
+n_recipes = cookies["Recipe_Index"].nunique()
+
+top20_props = (
+    cookies[["Recipe_Index", "Ingredient"]]
+    .drop_duplicates()                             
+    .groupby("Ingredient")["Recipe_Index"]
+    .nunique()                                     
+    .sort_values(ascending=False)
+    .head(20)
+    .reset_index(name="num_recipes")
+)
+
+top20_props["proportion"] = top20_props["num_recipes"] / n_recipes
+
+print(top20_props)
+
+```
+
 [Part 2] Print out a character string that lists all of the ingredients that do not appear in at least 20 recipes.
+
+```{r}
+bottom_props <- cookies |>
+  distinct(Recipe_Index, Ingredient) |>           
+  count(Ingredient, name = "num_recipes") |>       
+  filter(num_recipes < 20) |>  
+  arrange(num_recipes) 
+
+bottom_props
+```
+
 
 
 (Delete this note, but you can include data values inline in markdown text by using backticks, at least in R. For instance, here is R's built in value for pi: `r pi`. Unfortunately, this doesn't work in python using the knitr markdown engine, but you can print the list out in python anyways using a code chunk.)
@@ -80,4 +219,15 @@ Using whatever plotting system you are comfortable with in R or python, see if y
 
 [Part 1] Create at least one plot (it doesn't have to be pretty) that showcases an interesting facet of the data.
 
+```{r}
+<<<<<<< HEAD
+=======
+
+>>>>>>> b8f1f5cde23b815b19117494cceef042696f94ab
+ggplot(joint, aes(x = n-missing_rating, y=avg_rating, label = Ingredient)) +
+    geom_col() 
+ ggplotly() 
+```
+
 [Part 2] Write 2-3 sentences about what you can learn from that plot and what directions you might want to investigate from here.
+This plot is not great, but it does show which ingredients were very common across all recipies. The problem with this plot is that it stacks the ratings of the ingredients that have the same 'n-missing_rating' value.
